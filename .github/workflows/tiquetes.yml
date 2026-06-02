@@ -1,0 +1,47 @@
+name: 🧾 Gaucha Sur — Tiquetes Electrónicos FE
+
+on:
+  schedule:
+    # Corre cada 30 minutos, todos los días
+    - cron: '*/30 * * * *'
+  # También permite correrlo manualmente desde GitHub
+  workflow_dispatch:
+
+jobs:
+  emitir-tiquetes:
+    name: Emitir tiquetes electrónicos
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Descargar código
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Instalar dependencias
+        run: pip install requests
+
+      - name: 🧾 Emitir tiquetes
+        env:
+          ODOO_URL:     ${{ secrets.ODOO_URL }}
+          ODOO_DB:      ${{ secrets.ODOO_DB }}
+          ODOO_USER:    ${{ secrets.ODOO_USER }}
+          ODOO_API_KEY: ${{ secrets.ODOO_API_KEY }}
+          ALEGRA_USER:  ${{ secrets.ALEGRA_USER }}
+          ALEGRA_TOKEN: ${{ secrets.ALEGRA_TOKEN }}
+          ALEGRA_ITEM_ID: ${{ secrets.ALEGRA_ITEM_ID }}
+          VENTANA_HORAS: '1'
+        run: python gaucha_sync.py
+
+      - name: 📊 Resultado
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Tiquetes emitidos correctamente"
+          else
+            echo "⚠️ Hubo errores — revisar el log de arriba"
+          fi
