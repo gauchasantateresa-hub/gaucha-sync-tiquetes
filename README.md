@@ -1,37 +1,47 @@
-# Gaucha Sur — Tiquetes Electrónicos Automáticos
+# Gaucha Sur — Servidor de Tiquetes Electrónicos
 
-Script que corre cada 30 minutos en GitHub Actions y emite
-tiquetes electrónicos v4.4 ante Hacienda CR automáticamente.
+Servidor que recibe pagos con tarjeta desde Odoo y emite
+tiquetes electrónicos v4.4 automáticamente en Alegra → Hacienda CR.
+
+## Flujo
+
+```
+Cliente paga con tarjeta en Odoo POS
+           ↓
+Odoo dispara el webhook automáticamente
+           ↓
+Este servidor recibe los datos
+           ↓
+Llama a Alegra → firma → envía a Hacienda
+           ↓
+Tiquete aceptado en segundos ✅
+```
 
 ## Costo: $0
 
-## Cómo funciona
+## Configurar el Webhook en Odoo
 
-1. Lee las órdenes POS pagadas con tarjeta en Odoo (últimas 2 horas)
-2. Las envía a Alegra vía API
-3. Alegra genera el XML, lo firma con el certificado .p12 y lo envía a Hacienda
-4. Marca la orden en Odoo como "tiquete emitido"
+1. Odoo → Ajustes → Técnico → Automatización → Webhooks
+2. "Nuevo"
+3. Modelo: `Orden de punto de venta (pos.order)`
+4. Disparador: `Al actualizar registro`
+5. Cuando el campo `state` cambia a `done`
+6. URL: `https://gaucha-tiquetes.onrender.com/webhook`
+7. Header: `X-Webhook-Secret: gaucha2026`
 
-## Configuración en GitHub Secrets
+## Variables de entorno en Render
 
-En tu repositorio de GitHub → Settings → Secrets → Actions:
+| Variable | Valor |
+|----------|-------|
+| ALEGRA_USER | gauchasantateresa@gmail.com |
+| ALEGRA_TOKEN | 547e9754350c6ec61e81 |
+| WEBHOOK_SECRET | gaucha2026 |
 
-| Secret | Valor |
-|--------|-------|
-| `ODOO_URL` | `https://gaucha-sur.odoo.com` |
-| `ODOO_DB` | `gaucha-sur` |
-| `ODOO_USER` | tu email de Odoo |
-| `ODOO_API_KEY` | la API key generada en Odoo |
-| `ALEGRA_USER` | `gauchasantateresa@gmail.com` |
-| `ALEGRA_TOKEN` | `547e9754350c6ec61e81` |
-| `ALEGRA_ITEM_ID` | (dejar vacío la primera vez) |
+## Probar manualmente
 
-## Cómo generar la API Key de Odoo
-
-1. Odoo → avatar (arriba derecha) → Mi perfil
-2. Tab "Cuenta" → "API Keys"
-3. "Nueva clave API" → nombre: "gaucha-sync" → copiar
-
-## Correr manualmente
-
-GitHub → Actions → "Gaucha Sur — Tiquetes Electrónicos FE" → "Run workflow"
+```bash
+curl -X POST https://gaucha-tiquetes.onrender.com/test \
+  -H "X-Webhook-Secret: gaucha2026" \
+  -H "Content-Type: application/json" \
+  -d '{"monto": 15000, "fecha": "2026-06-02", "referencia": "TEST-001"}'
+```
