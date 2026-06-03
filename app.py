@@ -8,8 +8,7 @@ log=logging.getLogger("gaucha")
 ALEGRA_USER=os.environ.get("ALEGRA_USER","gauchasantateresa@gmail.com")
 ALEGRA_TOKEN=os.environ.get("ALEGRA_TOKEN","547e9754350c6ec61e81")
 WEBHOOK_SECRET=os.environ.get("WEBHOOK_SECRET","gaucha2026")
-# ID del item "Servicio de Restaurante" en Alegra (CABYS 6331000000000)
-ALEGRA_ITEM_ID=int(os.environ.get("ALEGRA_ITEM_ID","2"))
+ALEGRA_ITEM_ID=int(os.environ.get("ALEGRA_ITEM_ID","3"))
 NOMBRE_SERVICIO="Servicio de Restaurante"
 ALEGRA_API="https://api.alegra.com/api/prime/v1"
 TARJETA_KW=["tarjeta","card","visa","mastercard","amex","credito","debito"]
@@ -21,8 +20,7 @@ def cors(resp):
     return resp
 
 @app.after_request
-def after(resp):
-    return cors(resp)
+def after(resp):return cors(resp)
 
 def alegra_h():
     c=base64.b64encode(f"{ALEGRA_USER}:{ALEGRA_TOKEN}".encode()).decode()
@@ -30,21 +28,12 @@ def alegra_h():
 
 def emitir(monto,fecha,ref):
     precio_sin_iva=round(monto/1.13,5)
-    p={
-        "date":str(fecha)[:10],"dueDate":str(fecha)[:10],
-        "paymentType":"cash","type":"04",
-        "stamp":{"generateStamp":True},
-        "items":[{
-            "id":ALEGRA_ITEM_ID,
-            "name":NOMBRE_SERVICIO,
-            "quantity":1,
-            "price":precio_sin_iva,
-            "tax":[{"id":5}]
-        }],
-        "notes":f"Ref: {ref}"
-    }
+    p={"date":str(fecha)[:10],"dueDate":str(fecha)[:10],"paymentType":"cash","type":"04",
+       "stamp":{"generateStamp":True},
+       "items":[{"id":ALEGRA_ITEM_ID,"name":NOMBRE_SERVICIO,"quantity":1,"price":precio_sin_iva,"tax":[{"id":5}]}],
+       "notes":f"Ref: {ref}"}
     r=requests.post(f"{ALEGRA_API}/invoices",headers=alegra_h(),json=p,timeout=30)
-    log.info("Alegra status: %s resp: %s", r.status_code, r.text[:400])
+    log.info("Alegra status: %s resp: %s",r.status_code,r.text[:400])
     if r.status_code in(200,201):
         d=r.json()
         return{"ok":True,"numero_alegra":d.get("id"),
@@ -53,15 +42,14 @@ def emitir(monto,fecha,ref):
     return{"ok":False,"error":r.json().get("message",r.text[:300])}
 
 @app.route("/")
-def health():return jsonify({"status":"ok","service":"Gaucha Sur FE","item_id":ALEGRA_ITEM_ID})
+def health():return jsonify({"status":"ok","item_id":ALEGRA_ITEM_ID})
 
 @app.route("/script")
 def script():
     try:
         with open("gaucha_tiquetes.js") as f:content=f.read()
         return Response(content,mimetype="application/javascript",headers={"Cache-Control":"no-cache"})
-    except:
-        return Response("// script not found",mimetype="application/javascript")
+    except:return Response("// not found",mimetype="application/javascript")
 
 @app.route("/instalar")
 def instalar():
@@ -80,8 +68,7 @@ def webhook():
         return jsonify({"error":"Unauthorized"}),401
     d=request.get_json(force=True,silent=True)or{}
     name=d.get("name","N/A");amount=float(d.get("amount_total",0))
-    date=d.get("date_order","");method=d.get("payment_method_name","").lower()
-    state=d.get("state","")
+    date=d.get("date_order","");method=d.get("payment_method_name","").lower();state=d.get("state","")
     log.info("Webhook: %s monto=%.0f metodo=%s estado=%s",name,amount,method,state)
     if state not in("done","invoiced","paid"):return jsonify({"status":"skipped","reason":f"Estado {state}"})
     if not any(k in method for k in TARJETA_KW):return jsonify({"status":"skipped","reason":"No tarjeta"})
