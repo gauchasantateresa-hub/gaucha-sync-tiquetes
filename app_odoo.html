@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiquetes FE — Gaucha Sur</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 20px; }
+  .container { max-width: 760px; margin: 0 auto; }
+  .header { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .logo { width: 44px; height: 44px; background: #1D9E75; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .header-info h1 { font-size: 18px; font-weight: 600; color: #1a1a2e; }
+  .header-info p { font-size: 13px; color: #666; margin-top: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-val { font-size: 26px; font-weight: 600; color: #1a1a2e; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  .stat.green .stat-val { color: #1D9E75; }
+  .stat.orange .stat-val { color: #e67e22; }
+  .controls { background: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); flex-wrap: wrap; }
+  .controls label { font-size: 13px; color: #555; font-weight: 500; }
+  .controls input[type="date"] { border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-primary { background: #1D9E75; color: white; }
+  .btn-primary:hover { background: #178a65; }
+  .btn-auto { background: #2980b9; color: white; }
+  .btn-auto:hover { background: #2471a3; }
+  .btn-auto.running { background: #e74c3c; }
+  .btn-auto.running:hover { background: #c0392b; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+  .card-header { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+  .card-header h2 { font-size: 15px; font-weight: 600; color: #333; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 16px; text-align: left; font-size: 12px; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #f0f0f0; }
+  td { padding: 12px 16px; font-size: 14px; color: #333; border-bottom: 1px solid #f9f9f9; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-ok { background: #d1f2eb; color: #0e6655; }
+  .badge-error { background: #fde8e8; color: #a93226; }
+  .badge-loading { background: #d6eaf8; color: #1a5276; }
+  .btn-emitir { padding: 6px 14px; border-radius: 6px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; background: #1D9E75; color: white; transition: all 0.15s; }
+  .btn-emitir:hover { background: #178a65; }
+  .btn-emitir:disabled { opacity: 0.4; cursor: not-allowed; }
+  .monto { font-weight: 600; color: #1a1a2e; }
+  .empty { text-align: center; padding: 40px; color: #aaa; }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+  .progress-bar { height: 4px; background: #e0f5ee; border-radius: 2px; margin-bottom: 16px; display: none; }
+  .progress-fill { height: 4px; background: #1D9E75; border-radius: 2px; transition: width 0.3s; }
+  .log { background: #1a1a2e; border-radius: 10px; padding: 14px 16px; margin-top: 16px; max-height: 140px; overflow-y: auto; display: none; }
+  .log p { font-family: monospace; font-size: 12px; color: #adf7cc; margin-bottom: 4px; }
+  .log p.err { color: #f1948a; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">🧾</div>
+    <div class="header-info">
+      <h1>Tiquetes Electrónicos — Gaucha Sur</h1>
+      <p>Lee órdenes de Odoo y emite tiquetes en Alegra → Hacienda CR</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" id="stat-total">0</div>
+      <div class="stat-label">Órdenes con tarjeta</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-val" id="stat-ok">0</div>
+      <div class="stat-label">Tiquetes emitidos</div>
+    </div>
+    <div class="stat orange">
+      <div class="stat-val" id="stat-pending">0</div>
+      <div class="stat-label">Pendientes</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label>Fecha:</label>
+    <input type="date" id="fecha-input" />
+    <button class="btn btn-primary" onclick="cargarOrdenes()" id="btn-cargar">
+      🔄 Cargar órdenes de Odoo
+    </button>
+    <button class="btn btn-auto" onclick="toggleAuto()" id="btn-auto" style="display:none">
+      ▶️ Emitir todos pendientes
+    </button>
+  </div>
+
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Órdenes con tarjeta</h2>
+      <span style="font-size:12px;color:#aaa;" id="last-update"></span>
+    </div>
+    <div id="tabla-container">
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <p>Cargá las órdenes para comenzar</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+</div>
+
+<script>
+const WEBHOOK = 'https://gaucha-sync-tiquetes.onrender.com/webhook';
+const SECRET = 'gaucha2026';
+const TARJETA_ID = 2; // ID del método "Tarjeta" en Odoo de Gaucha Sur
+
+let ordenes = [];
+let autoRunning = false;
+let autoInterval = null;
+
+// Fecha de hoy por defecto
+const hoy = new Date();
+hoy.setHours(0,0,0,0);
+document.getElementById('fecha-input').value = hoy.toISOString().split('T')[0];
+
+function log(msg, err=false) {
+  const logEl = document.getElementById('log');
+  logEl.style.display = 'block';
+  const p = document.createElement('p');
+  p.textContent = '[' + new Date().toLocaleTimeString('es-CR') + '] ' + msg;
+  if (err) p.className = 'err';
+  logEl.appendChild(p);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function formatMonto(m) {
+  return '₡' + parseFloat(m).toLocaleString('es-CR', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+function actualizarStats() {
+  const total = ordenes.length;
+  const ok = ordenes.filter(o => o.estado === 'ok').length;
+  const pending = ordenes.filter(o => o.estado === 'pendiente').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-ok').textContent = ok;
+  document.getElementById('stat-pending').textContent = pending;
+}
+
+async function cargarOrdenes() {
+  const fecha = document.getElementById('fecha-input').value;
+  if (!fecha) { alert('Seleccioná una fecha'); return; }
+
+  const btn = document.getElementById('btn-cargar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Leyendo Odoo...';
+  log('Conectando a Odoo...');
+
+  try {
+    // 1. Buscar órdenes del día seleccionado
+    const fechaInicio = fecha + ' 00:00:00';
+    const fechaFin = fecha + ' 23:59:59';
+
+    const respOrdenes = await fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: 1,
+        params: {
+          model: 'pos.order',
+          method: 'search_read',
+          args: [[['state','=','done'],['date_order','>=',fechaInicio],['date_order','<=',fechaFin]]],
+          kwargs: { fields: ['name','amount_total','date_order','payment_ids','session_id'], limit: 500, order: 'date_order asc' }
+        }
+      })
+    });
+    const dataOrdenes = await respOrdenes.json();
+    const todasOrdenes = dataOrdenes.result || [];
+    log('📦 ' + todasOrdenes.length + ' órdenes encontradas para ' + fecha);
+
+    if (!todasOrdenes.length) {
+      document.getElementById('tabla-container').innerHTML = '<div class="empty"><div class="empty-icon">🈳</div><p>No hay órdenes para esta fecha</p></div>';
+      return;
+    }
+
+    // 2. Leer todos los pagos de esas órdenes
+    const paymentIds = todasOrdenes.flatMap(o => o.payment_ids);
+    const respPagos = await fetch('/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0', method: 'call', id: 2,
+        params: {
+          model: 'pos.payment',
+          method: 'read',
+          args: [paymentIds],
+          kwargs: { fields: ['amount','payment_method_id','pos_order_id'] }
+        }
+      })
+    });
+    const dataPagos = await respPagos.json();
+    const pagos = dataPagos.result || [];
+
+    // 3. Filtrar solo las que tienen tarjeta
+    const pagosTarjeta = new Set(
+      pagos.filter(p => p.payment_method_id[0] === TARJETA_ID).map(p => p.pos_order_id[0])
+    );
+
+    const ordenesTarjeta = todasOrdenes.filter(o => pagosTarjeta.has(o.id));
+    log('💳 ' + ordenesTarjeta.length + ' órdenes con tarjeta encontradas');
+
+    // 4. Preservar estado de las ya procesadas
+    const estadoAnterior = {};
+    ordenes.forEach(o => { estadoAnterior[o.id] = o.estado; });
+
+    ordenes = ordenesTarjeta.map(o => ({
+      id: o.id,
+      nombre: o.name,
+      monto: o.amount_total,
+      fecha: o.date_order,
+      sesion: o.session_id[1],
+      estado: estadoAnterior[o.id] || 'pendiente',
+      detalle: ''
+    }));
+
+    renderTabla();
+    actualizarStats();
+
+    if (ordenes.length > 0) {
+      document.getElementById('btn-auto').style.display = 'inline-flex';
+    }
+
+    document.getElementById('last-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-CR');
+
+  } catch(e) {
+    log('❌ Error leyendo Odoo: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Cargar órdenes de Odoo';
+  }
+}
+
+function renderTabla() {
+  const pendientes = ordenes.filter(o => o.estado === 'pendiente').length;
+  if (!ordenes.length) {
+    document.getElementById('tabla-container').innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No hay órdenes con tarjeta para esta fecha</p></div>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Orden</th><th>Sesión</th><th>Hora</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody>';
+  ordenes.forEach((o, i) => {
+    const hora = o.fecha.split(' ')[1]?.substring(0,5) || '';
+    const badge = o.estado === 'ok'
+      ? '<span class="badge badge-ok">✅ Emitido</span>'
+      : o.estado === 'error'
+      ? '<span class="badge badge-error">❌ Error</span>'
+      : o.estado === 'loading'
+      ? '<span class="badge badge-loading"><span class="spinner" style="border-color:rgba(26,82,118,0.3);border-top-color:#1a5276"></span> Emitiendo...</span>'
+      : '<span class="badge badge-pending">⏳ Pendiente</span>';
+
+    const btn = o.estado === 'pendiente'
+      ? `<button class="btn-emitir" onclick="emitirUno(${i})">Emitir FE</button>`
+      : o.estado === 'error'
+      ? `<button class="btn-emitir" onclick="emitirUno(${i})" style="background:#e74c3c">Reintentar</button>`
+      : '';
+
+    html += `<tr>
+      <td><strong>${o.nombre}</strong></td>
+      <td style="color:#666;font-size:13px">${o.sesion}</td>
+      <td style="color:#666;font-size:13px">${hora}</td>
+      <td class="monto">${formatMonto(o.monto)}</td>
+      <td>${badge}${o.detalle ? '<br><span style="font-size:11px;color:#888">' + o.detalle + '</span>' : ''}</td>
+      <td>${btn}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('tabla-container').innerHTML = html;
+}
+
+async function emitirUno(idx) {
+  const o = ordenes[idx];
+  if (!o || (o.estado === 'ok')) return;
+
+  ordenes[idx].estado = 'loading';
+  ordenes[idx].detalle = '';
+  renderTabla();
+  actualizarStats();
+
+  try {
+    const resp = await fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Webhook-Secret': SECRET },
+      body: JSON.stringify({
+        name: o.nombre,
+        amount_total: o.monto,
+        date_order: o.fecha,
+        state: 'done',
+        payment_method_name: 'tarjeta'
+      })
+    });
+    const data = await resp.json();
+    if (resp.ok && data.status === 'ok') {
+      ordenes[idx].estado = 'ok';
+      ordenes[idx].detalle = data.consecutivo || ('Alegra #' + data.numero_alegra);
+      log('✅ ' + o.nombre + ' → ' + (data.consecutivo || '#' + data.numero_alegra));
+    } else {
+      ordenes[idx].estado = 'error';
+      ordenes[idx].detalle = data.message || 'Error desconocido';
+      log('❌ ' + o.nombre + ': ' + (data.message || 'Error'), true);
+    }
+  } catch(e) {
+    ordenes[idx].estado = 'error';
+    ordenes[idx].detalle = 'Sin conexión';
+    log('❌ ' + o.nombre + ': ' + e.message, true);
+  }
+
+  renderTabla();
+  actualizarStats();
+}
+
+async function emitirTodosPendientes() {
+  const pendientes = ordenes.map((o,i) => ({...o, idx: i})).filter(o => o.estado === 'pendiente' || o.estado === 'error');
+  if (!pendientes.length) { log('✅ No hay pendientes'); return; }
+
+  const bar = document.getElementById('progress-bar');
+  const fill = document.getElementById('progress-fill');
+  bar.style.display = 'block';
+  log('🚀 Emitiendo ' + pendientes.length + ' tiquetes pendientes...');
+
+  for (let i = 0; i < pendientes.length; i++) {
+    if (!autoRunning) { log('⏸ Proceso detenido'); break; }
+    const pct = Math.round((i / pendientes.length) * 100);
+    fill.style.width = pct + '%';
+    await emitirUno(pendientes[i].idx);
+    await new Promise(r => setTimeout(r, 800)); // pausa entre emisiones
+  }
+
+  fill.style.width = '100%';
+  setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0%'; }, 2000);
+  log('🏁 Proceso completado');
+  autoRunning = false;
+  document.getElementById('btn-auto').innerHTML = '▶️ Emitir todos pendientes';
+  document.getElementById('btn-auto').className = 'btn btn-auto';
+}
+
+function toggleAuto() {
+  if (!autoRunning) {
+    autoRunning = true;
+    document.getElementById('btn-auto').innerHTML = '⏹ Detener';
+    document.getElementById('btn-auto').className = 'btn btn-auto running';
+    emitirTodosPendientes();
+  } else {
+    autoRunning = false;
+    document.getElementById('btn-auto').innerHTML = '▶️ Emitir todos pendientes';
+    document.getElementById('btn-auto').className = 'btn btn-auto';
+  }
+}
+</script>
+</body>
+</html>
