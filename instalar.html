@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Instalar Tiquetes FE — Gaucha Sur</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:600px;margin:60px auto;padding:20px;color:#333;}
+h1{color:#1D9E75;font-size:24px;margin-bottom:8px;}
+.card{background:#f8f8f8;border-radius:12px;padding:24px;margin:20px 0;border:1px solid #e0e0e0;}
+.step{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start;}
+.num{background:#1D9E75;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;margin-top:2px;}
+.step p{margin:0;line-height:1.5;}
+.step b{display:block;margin-bottom:4px;}
+a.bookmarklet{display:inline-block;background:#1D9E75;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;margin:10px 0;}
+code{background:#e8f5e9;padding:2px 6px;border-radius:4px;font-size:13px;color:#1D9E75;}
+.note{background:#fff3cd;border-radius:8px;padding:12px 16px;font-size:13px;color:#856404;margin-top:16px;}
+</style>
+</head>
+<body>
+<h1>🧾 Tiquetes FE — Gaucha Sur</h1>
+<p>Panel de facturación electrónica integrado en Odoo.</p>
+
+<div class="card">
+  <strong style="font-size:16px;">Instalación — 1 sola vez</strong>
+  
+  <div class="step" style="margin-top:16px;">
+    <div class="num">1</div>
+    <p><b>Arrastrá este botón a tus Favoritos:</b>
+    <br><br>
+    <a class="bookmarklet" id="bm" href="#">🧾 Tiquetes FE</a>
+    <br><small style="color:#888;font-size:12px;">Arrastrá el botón verde a la barra de favoritos de Chrome</small></p>
+  </div>
+
+  <div class="step">
+    <div class="num">2</div>
+    <p><b>Abrí Odoo</b> en cualquier página de <code>gaucha-sur.odoo.com</code></p>
+  </div>
+
+  <div class="step">
+    <div class="num">3</div>
+    <p><b>Tocá el favorito "🧾 Tiquetes FE"</b> — aparece el panel verde con las órdenes del día</p>
+  </div>
+</div>
+
+<div class="note">
+  💡 <strong>El panel persiste mientras no recargués la página.</strong> Si recargás, solo tocá el favorito de nuevo — carga en 2 segundos.
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <strong>¿Cómo usar el panel?</strong>
+  <div class="step" style="margin-top:12px;">
+    <div class="num">1</div>
+    <p>Tocá <code>🔄 Cargar hoy</code> — lee todas las órdenes con tarjeta automáticamente</p>
+  </div>
+  <div class="step">
+    <div class="num">2</div>
+    <p>Tocá <code>▶ Emitir todos</code> para emitir todos los tiquetes de una vez, O tocá <code>Emitir</code> en cada orden individualmente</p>
+  </div>
+  <div class="step">
+    <div class="num">3</div>
+    <p>Cada tiquete queda marcado <strong>✅ Emitido</strong> con el consecutivo de Hacienda</p>
+  </div>
+</div>
+
+<script>
+// Generar el bookmarklet dinámicamente
+var scriptUrl = 'https://gaucha-sync-tiquetes.onrender.com/script';
+var code = '(function(){var s=document.createElement(\'script\');s.src=\''+scriptUrl+'?t=\'+Date.now();document.head.appendChild(s);})();';
+document.getElementById('bm').href = 'javascript:' + code;
+</script>
+</body>
+</html>
