@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO,format="%(asctime)s [%(levelname)s] %(mes
 log=logging.getLogger("gaucha")
 
 ALEGRA_USER=os.environ.get("ALEGRA_USER","gauchasantateresa@gmail.com")
-ALEGRA_TOKEN=os.environ.get("ALEGRA_TOKEN","547e9754350c6ec61e81")
+ALEGRA_TOKEN=os.environ.get("ALEGRA_TOKEN","7a89290c423ba869509c")
 WEBHOOK_SECRET=os.environ.get("WEBHOOK_SECRET","gaucha2026")
 ALEGRA_ITEM_ID=int(os.environ.get("ALEGRA_ITEM_ID","3"))
 NOMBRE_SERVICIO="Servicio de Restaurante"
