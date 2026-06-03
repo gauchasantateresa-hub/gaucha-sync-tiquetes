@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gaucha-tiquetes
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: ALEGRA_USER
+        value: gauchasantateresa@gmail.com
+      - key: ALEGRA_TOKEN
+        value: 547e9754350c6ec61e81
+      - key: WEBHOOK_SECRET
+        value: gaucha2026
