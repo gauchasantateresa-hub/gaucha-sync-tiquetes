@@ -1,3 +1,5 @@
-flask==3.0.3
-requests==2.32.3
-gunicorn==22.0.0
+flask>=3.0
+cryptography>=42.0
+lxml>=5.0
+requests>=2.31
+gunicorn>=21.0
