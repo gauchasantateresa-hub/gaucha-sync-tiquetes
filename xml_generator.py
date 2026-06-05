@@ -92,6 +92,7 @@ def generar_xml(
         f'<Codigo>01</Codigo>'
         f'<CodigoTarifaIVA>08</CodigoTarifaIVA>'
         f'<Tarifa>13</Tarifa>'
+        f'<BaseImponible>{f(precio_sin_iva)}</BaseImponible>'
         f'<Monto>{f(monto_iva)}</Monto>'
         f'</Impuesto>'
         f'<MontoTotalLinea>{f(total)}</MontoTotalLinea>'
