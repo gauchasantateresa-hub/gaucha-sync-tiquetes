@@ -3,3 +3,6 @@ cryptography>=42.0
 lxml>=5.0
 requests>=2.31
 gunicorn>=21.0
+pyOpenSSL==22.1.0
+xmlsig>=1.0.1
+xades==1.0.0
