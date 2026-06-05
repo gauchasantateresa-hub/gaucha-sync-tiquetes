@@ -1,6 +1,17 @@
 """
-Generador XML v4.4 — TiqueteElectronico
-Orden EXACTO según XSD oficial v4.4 y tiquete aceptado de Armonia
+Generador XML TiqueteElectronico v4.4
+Orden de campos según XSD oficial de Hacienda v4.4 (descargado hoy)
+
+LineaDetalle:
+  NumeroLinea → CodigoCABYS → [CodigoComercial 0-5] → Cantidad → UnidadMedida
+  → [Detalle] → [PrecioUnitario] → [MontoTotal] → [SubTotal] → [Impuesto] → MontoTotalLinea
+
+ResumenFactura:
+  CodigoTipoMoneda → TotalServGravados → TotalServExentos → TotalServExonerado
+  → TotalMercanciasGravadas → TotalMercanciasExentas → TotalMercExonerada
+  → TotalGravado → TotalExento → TotalExonerado → TotalVenta → TotalDescuentos
+  → TotalVentaNeta → TotalImpuesto → TotalIVADevuelto → TotalOtrosCargos
+  → MedioPago{TipoMedioPago,TotalMedioPago} → TotalComprobante
 """
 from datetime import datetime
 
@@ -41,7 +52,7 @@ def generar_xml(
         f' xmlns:xsi="{NS_XSI}"'
         f' xsi:schemaLocation="{NS_DOC}.xsd">'
 
-        # Encabezado — orden según XSD v4.4
+        # Encabezado — orden XSD v4.4
         f'<Clave>{clave}</Clave>'
         f'<ProveedorSistemas>{proveedor_sistemas}</ProveedorSistemas>'
         f'<CodigoActividadEmisor>{actividad_economica}</CodigoActividadEmisor>'
@@ -62,14 +73,15 @@ def generar_xml(
         f'<CorreoElectronico>{emisor_email}</CorreoElectronico>'
         f'</Emisor>'
 
-        # CondicionVenta va directo después del Emisor (NO MedioPago)
+        # CondicionVenta directamente después del Emisor
         f'<CondicionVenta>{condicion_venta}</CondicionVenta>'
 
-        # Detalle
+        # DetalleServicio
         f'<DetalleServicio>'
         f'<LineaDetalle>'
         f'<NumeroLinea>1</NumeroLinea>'
-        f'<CodigoComercial><Tipo>04</Tipo><Codigo>{cabys}</Codigo></CodigoComercial>'
+        # CodigoCABYS va primero (13 dígitos obligatorio en v4.4)
+        f'<CodigoCABYS>{cabys}</CodigoCABYS>'
         f'<Cantidad>{f(cantidad)}</Cantidad>'
         f'<UnidadMedida>{unidad_medida}</UnidadMedida>'
         f'<Detalle>{descripcion}</Detalle>'
@@ -86,7 +98,7 @@ def generar_xml(
         f'</LineaDetalle>'
         f'</DetalleServicio>'
 
-        # ResumenFactura — MedioPago va DENTRO con TipoMedioPago y TotalMedioPago
+        # ResumenFactura — MedioPago DENTRO, antes de TotalComprobante
         f'<ResumenFactura>'
         f'<CodigoTipoMoneda><CodigoMoneda>{moneda}</CodigoMoneda><TipoCambio>1</TipoCambio></CodigoTipoMoneda>'
         f'<TotalServGravados>{f(precio_sin_iva)}</TotalServGravados>'
