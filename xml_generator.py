@@ -1,7 +1,6 @@
 """
 Generador XML v4.4 — TiqueteElectronico
-Orden de campos según XSD oficial de Hacienda v4.4
-Validado contra tiquete aceptado de Armonia (jun 2026)
+Orden EXACTO según XSD oficial v4.4 y tiquete aceptado de Armonia
 """
 from datetime import datetime
 
@@ -10,7 +9,6 @@ NS_DS  = "http://www.w3.org/2000/09/xmldsig#"
 NS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
 
 def f(n):
-    """Formato numérico: hasta 5 decimales, sin ceros finales."""
     s = f"{float(n):.5f}".rstrip("0").rstrip(".")
     return s or "0"
 
@@ -27,33 +25,29 @@ def generar_xml(
 ) -> bytes:
 
     precio_sin_iva = float(precio_unitario)
-    monto_iva     = round(precio_sin_iva * porcentaje_iva / 100, 5)
-    total         = round(precio_sin_iva + monto_iva, 5)
+    monto_iva      = round(precio_sin_iva * porcentaje_iva / 100, 5)
+    total          = round(precio_sin_iva + monto_iva, 5)
 
     if isinstance(fecha_emision, datetime):
         fecha_str = fecha_emision.strftime("%Y-%m-%dT%H:%M:%S-06:00")
     else:
         fecha_str = str(fecha_emision)
 
-    # Orden EXACTO según XSD v4.4 y tiquete aceptado de Armonia:
-    # Clave → ProveedorSistemas → CodigoActividadEmisor → NumeroConsecutivo
-    # → FechaEmision → Emisor → [Receptor] → CondicionVenta → MedioPago
-    # → DetalleServicio → ResumenFactura
     xml = (
-        f'<?xml version="1.0" encoding="UTF-8"?>'
+        '<?xml version="1.0" encoding="UTF-8"?>'
         f'<TiqueteElectronico'
         f' xmlns="{NS_DOC}"'
         f' xmlns:ds="{NS_DS}"'
         f' xmlns:xsi="{NS_XSI}"'
         f' xsi:schemaLocation="{NS_DOC}.xsd">'
-        
-        # Encabezado — orden crítico
+
+        # Encabezado — orden según XSD v4.4
         f'<Clave>{clave}</Clave>'
         f'<ProveedorSistemas>{proveedor_sistemas}</ProveedorSistemas>'
         f'<CodigoActividadEmisor>{actividad_economica}</CodigoActividadEmisor>'
         f'<NumeroConsecutivo>{consecutivo}</NumeroConsecutivo>'
         f'<FechaEmision>{fecha_str}</FechaEmision>'
-        
+
         # Emisor
         f'<Emisor>'
         f'<Nombre>{emisor_nombre}</Nombre>'
@@ -67,11 +61,10 @@ def generar_xml(
         f'<Telefono><CodigoPais>506</CodigoPais><NumTelefono>{emisor_telefono}</NumTelefono></Telefono>'
         f'<CorreoElectronico>{emisor_email}</CorreoElectronico>'
         f'</Emisor>'
-        
-        # Condición venta y medio pago
+
+        # CondicionVenta va directo después del Emisor (NO MedioPago)
         f'<CondicionVenta>{condicion_venta}</CondicionVenta>'
-        f'<MedioPago>{medio_pago}</MedioPago>'
-        
+
         # Detalle
         f'<DetalleServicio>'
         f'<LineaDetalle>'
@@ -92,8 +85,8 @@ def generar_xml(
         f'<MontoTotalLinea>{f(total)}</MontoTotalLinea>'
         f'</LineaDetalle>'
         f'</DetalleServicio>'
-        
-        # Resumen
+
+        # ResumenFactura — MedioPago va DENTRO con TipoMedioPago y TotalMedioPago
         f'<ResumenFactura>'
         f'<CodigoTipoMoneda><CodigoMoneda>{moneda}</CodigoMoneda><TipoCambio>1</TipoCambio></CodigoTipoMoneda>'
         f'<TotalServGravados>{f(precio_sin_iva)}</TotalServGravados>'
@@ -111,6 +104,10 @@ def generar_xml(
         f'<TotalImpuesto>{f(monto_iva)}</TotalImpuesto>'
         f'<TotalIVADevuelto>0</TotalIVADevuelto>'
         f'<TotalOtrosCargos>0</TotalOtrosCargos>'
+        f'<MedioPago>'
+        f'<TipoMedioPago>{medio_pago}</TipoMedioPago>'
+        f'<TotalMedioPago>{f(total)}</TotalMedioPago>'
+        f'</MedioPago>'
         f'<TotalComprobante>{f(total)}</TotalComprobante>'
         f'</ResumenFactura>'
         f'</TiqueteElectronico>'
