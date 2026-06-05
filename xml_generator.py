@@ -115,7 +115,7 @@ def generar_xml_tiquete(
     # Impuesto
     impuesto = sub(linea, "Impuesto")
     sub(impuesto, "Codigo", "01")  # 01 = IVA
-    sub(impuesto, "CodigoTarifa", "08")  # 08 = 13%
+    sub(impuesto, "CodigoTarifaIVA", "08")  # 08 = 13%
     sub(impuesto, "Tarifa", _fmt(porcentaje_iva))
     sub(impuesto, "Monto", _fmt(monto_iva))
 
@@ -265,7 +265,7 @@ def generar_xml(
     t(L, "SubTotal", f(monto_linea))
     IMP = etree.SubElement(L, "Impuesto")
     t(IMP, "Codigo", "01")
-    t(IMP, "CodigoTarifa", "08")
+    t(IMP, "CodigoTarifaIVA", "08")
     t(IMP, "Tarifa", f(porcentaje_iva))
     t(IMP, "Monto", f(monto_iva))
     t(L, "MontoTotalLinea", f(total))
